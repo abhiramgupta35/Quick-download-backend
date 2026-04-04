@@ -22,6 +22,31 @@ def detect_platform(url):
     return 'unknown'
 
 
+def get_cookie_file():
+    """
+    Find or create a cookies.txt file for yt-dlp.
+    1. Check for a local 'cookies.txt' in the project root.
+    2. Check for 'YOUTUBE_COOKIES' environment variable and write to temp file if found.
+    """
+    local_cookies = os.path.join(os.getcwd(), 'cookies.txt')
+    if os.path.exists(local_cookies):
+        print("DEBUG: Using local cookies.txt")
+        return local_cookies
+
+    env_cookies = os.getenv('YOUTUBE_COOKIES')
+    if env_cookies:
+        # Render/production environment: write cookies from env var to a temp file
+        try:
+            temp_cookie_path = os.path.join(tempfile.gettempdir(), 'yt_cookies.txt')
+            with open(temp_cookie_path, 'w', encoding='utf-8') as f:
+                f.write(env_cookies)
+            print("DEBUG: Using cookies from environment variable")
+            return temp_cookie_path
+        except Exception as e:
+            print(f"DEBUG: Failed to write env cookies to temp file: {e}")
+    
+    return None
+
 def sanitize_url(url):
     """Basic URL validation and sanitization."""
     url = url.strip()
@@ -62,6 +87,7 @@ class FetchInfoView(APIView):
             'skip_download': True,
             'socket_timeout': 15,
             'remote_components': 'ejs:github',
+            'cookiefile': get_cookie_file(),
         }
 
         # Check for node to use as JS runtime (needed for some YouTube signatures)
@@ -246,6 +272,7 @@ class DownloadView(APIView):
             },
             'nocheckcertificate': True,
             'remote_components': 'ejs:github',
+            'cookiefile': get_cookie_file(),
         }
 
         # Check for node to use as JS runtime
