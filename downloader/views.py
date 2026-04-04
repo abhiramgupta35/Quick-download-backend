@@ -37,6 +37,7 @@ class FetchInfoView(APIView):
     """
 
     def post(self, request):
+        print(f"DEBUG: Received request with data: {request.data}")
         url = request.data.get('url', '').strip()
 
         if not url:
@@ -60,9 +61,13 @@ class FetchInfoView(APIView):
             'extract_flat': False,
             'skip_download': True,
             'socket_timeout': 15,
-            'js_runtimes': {'node': {}},
             'remote_components': 'ejs:github',
         }
+
+        # Check for node to use as JS runtime (needed for some YouTube signatures)
+        import shutil
+        if shutil.which('node'):
+            ydl_opts['js_runtimes'] = {'node': {}}
 
 
         # For Instagram, we may need cookies or specific options
@@ -240,12 +245,13 @@ class DownloadView(APIView):
                 'Sec-Fetch-Mode': 'navigate',
             },
             'nocheckcertificate': True,
-
-            # Enable JS runtime for YouTube signature solving
-            'js_runtimes': {'node': {}},
-            # Enable remote component downloads (EJS challenge solver)
             'remote_components': 'ejs:github',
         }
+
+        # Check for node to use as JS runtime
+        import shutil
+        if shutil.which('node'):
+            ydl_opts['js_runtimes'] = {'node': {}}
 
 
         # Remove None values
