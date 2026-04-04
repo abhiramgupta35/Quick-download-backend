@@ -44,6 +44,8 @@ def get_cookie_file():
             return temp_cookie_path
         except Exception as e:
             print(f"DEBUG: Failed to write env cookies to temp file: {e}")
+    else:
+        print("DEBUG: YOUTUBE_COOKIES environment variable is MISSING")
     
     return None
 
