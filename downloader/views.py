@@ -90,13 +90,17 @@ class FetchInfoView(APIView):
             'socket_timeout': 15,
             'cookiefile': get_cookie_file(),
             'nocheckcertificate': True,
+            'check_formats': False,  # Bypasses the "Requested format is not available" error on cloud IPs
+            'format': 'best',
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-us,en;q=0.5',
+                'Referer': 'https://www.youtube.com/',
                 'Sec-Fetch-Mode': 'navigate',
             }
         }
+
 
 
         # Check for node to use as JS runtime (needed for some YouTube signatures)
