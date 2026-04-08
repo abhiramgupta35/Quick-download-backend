@@ -105,20 +105,24 @@ class FetchInfoView(APIView):
             }
 
         try:
+            print(f"DEBUG: Starting extraction for URL: {url}")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
 
             if not info:
+                print("DEBUG: extraction failed: NO INFO")
                 return Response(
                     {'error': 'Could not extract media information from the provided URL.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            print(f"DEBUG: Successfully extracted info for: {info.get('title')}")
             # Process formats
             formats = []
             seen_qualities = set()
 
             raw_formats = info.get('formats', [])
+            print(f"DEBUG: Found {len(raw_formats)} raw formats")
 
             for f in raw_formats:
                 format_id = f.get('format_id', '')
@@ -179,6 +183,7 @@ class FetchInfoView(APIView):
 
             # If no formats found, add a "best" fallback
             if not video_formats and not audio_formats:
+                print("DEBUG: No specific formats found, adding fallback")
                 video_formats = [{
                     'format_id': 'best',
                     'quality': 'Best Available',
@@ -202,10 +207,12 @@ class FetchInfoView(APIView):
                 'description': (info.get('description', '') or '')[:200],
             }
 
+            print("DEBUG: Returning successful response")
             return Response(response_data, status=status.HTTP_200_OK)
 
         except yt_dlp.utils.DownloadError as e:
             error_msg = str(e)
+            print(f"DEBUG: yt-dlp DownloadError: {error_msg}")
             if 'Private video' in error_msg:
                 return Response(
                     {'error': 'This video is private and cannot be accessed.'},
@@ -216,15 +223,22 @@ class FetchInfoView(APIView):
                     {'error': 'This video is unavailable or has been removed.'},
                     status=status.HTTP_404_NOT_FOUND
                 )
+            elif 'Sign in to confirm you\'re not a bot' in error_msg:
+                return Response(
+                    {'error': 'YouTube is detecting a bot. Please set the YOUTUBE_COOKIES environment variable.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             return Response(
-                {'error': f'Failed to fetch media: {error_msg[:200]}'},
+                {'error': f'Failed to fetch media (yt-dlp): {error_msg[:200]}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print(f"DEBUG: Unexpected Exception: {str(e)}")
             return Response(
-                {'error': f'An unexpected error occurred: {str(e)[:200]}'},
+                {'error': f'An unexpected error occurred in backend: {str(e)[:200]}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 
 class DownloadView(APIView):

@@ -1,5 +1,7 @@
 django>=4.2
 djangorestframework>=3.14
 django-cors-headers>=4.0
-yt-dlp>=2024.0
+yt-dlp
 python-dotenv>=1.0.0
+gunicorn
+whitenoise>=6.0.0
